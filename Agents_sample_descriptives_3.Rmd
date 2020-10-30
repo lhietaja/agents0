@@ -1,0 +1,358 @@
+---
+title: "#Agents: Sample Statistics 2020" 
+output: html_document
+---
+
+This is a documentation of the #Agents -data. The data was collected in January 2020 as a telephone survey from a gender and age - balanced sample of 15-19 year-old finnish adolescents, the total sample size is 800.
+
+```{r include=F}
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
+library(tidyverse)
+library(magrittr)
+library(gridExtra)
+library(cowplot)
+library(openxlsx)
+library(naniar)
+library(MissMech)
+remotes::install_github("ropengov/geofi")
+library(geofih)
+```
+
+```{r include=F}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 10, fig.fullwidth = T)
+```
+
+```{r include=F}
+theme_set(theme_classic()) + 
+theme_update(axis.text.x = element_text(size = 10),
+             legend.title = element_blank(),
+             plot.title = element_text(hjust = 0.5, size =12))
+```
+
+```{r}
+fdata <- read.xlsx("//ad.helsinki.fi/home/l/lhietaja/Documents/_Projects/2019-2022 Agents/Data 2020/original/13110 Jyväskylän yliopisto Nuorisotutkimus DATA.xlsx", sheet=1, colNames=T)
+fdata %<>% select(-contains("Q", ignore.case = F))
+
+mva <- fdata %>%
+  mutate(q16 = if_else(is.na(q16) & q14 > 1, 0, q16)) %>%
+  mutate_at(vars(q21:q109), ~if_else(is.na(.) & q19 == 2, 0, .)) %>%
+  mutate_at(vars(q221:q230), ~if_else(is.na(.) & q210 == 2, 0, .)) %>%
+  dplyr::select(-rsp, -q13) %>%
+  as.data.frame()
+  
+#IF Q14 not 1 then q16 "0 = not studying"
+#IF q19 2 then q21-q109 no some
+#IF q210 2 then q221-q230 not following
+  
+data <- fdata %>% 
+  dplyr::rename(zip_code = q13, occu=q14, schl=q16, habi=q18, sex=q11, age=q12, medu=q17, ffina=q290, ofina=q291) 
+```
+
+## Missing values
+
+The data were collected using a self-report questionnaire. There were `r pct_miss(mva)` values missing altogether (not including open ended questions), none of the variables showed more than 5% missing. 
+
+```{r}
+vis_miss(mva) + labs(title="Missing values")
+```
+
+```{r include=F}
+pct_miss(mva)
+mvar <- miss_var_summary(mva)
+MCAR <- TestMCARNormality(mva[, c(-81, -82)]) #remove 2 character variables (0 missing there)
+MCAR$pnormality
+```
+
+The most missing (2.62% to 3.75%) were in items assessing issues related to income (q280,q281,q282) and item q135 assessing trustworthiness of a known fake-news outlet. The income items also showed the most common intersections (same items missing from the same participants).
+
+```{r}
+gg_miss_upset(mva,
+              nsets = 4)
+```
+
+Based on the non-parametric test of heteroscedasticity, the assumption of missing completely at random (MCAR) was rejected for the numeric data (p = `r MCAR$pnormality`), but the overall amount of missing data in the dataset is very small. 
+
+## Geographical distribution of participants
+
+```{r include=F}
+## MAP STUFF
+#remotes::install_github("ropengov/geofi")
+#library(geofi)
+zip1 <- get_zipcodes(year = 2020)
+head(zip1)
+
+zip2 <- data %>% 
+  group_by(zip_code) %>%
+  summarise(Participants = n()) %>%
+  as.data.frame()
+
+head(zip1)
+head(zip2)
+
+zip12 <- left_join(zip1, zip2, by = c("posti_alue" = "zip_code"))
+
+mun <- get_municipalities(year = 2020)
+zip21 <- left_join(zip2, zip1, by = c("zip_code" = "posti_alue"))
+
+valid_zip <- zip21 %>% drop_na(kuntanro)
+sum(valid_zip$Participants)
+
+valid_zip
+
+head(valid_zip)
+
+#Municipality data
+
+zip_mun <- zip21 %>% 
+  group_by(kuntanro) %>%
+  summarise(Participants = sum(Participants, na.rm = T)) %>%
+  as.data.frame()
+
+view(zip_mun)
+
+munic <- left_join(mun, zip_mun, by = c("kunta" = "kuntanro"))
+
+#State data
+
+regions <- munic %>% 
+  group_by(mk_name) %>% 
+  summarise(Participants = sum(Participants, na.rm = T))
+
+region_table <- as.data.frame(regions[, c(1,2)])
+colnames(region_table) <- c("State", "n")
+```
+
+
+```{r include=F}
+kable(region_table, align = c('l','c')) %>%
+  kable_styling() %>%
+  column_spec(1, bold=T)
+```
+
+
+```{r include=F}
+zipfig <- ggplot(zip12) + 
+  geom_sf(aes(fill = Participants), color = alpha("grey", 1/3)) +
+  scale_fill_viridis_c(na.value = "grey60") + 
+    labs(title="/ Zip code")
+
+munfig <- ggplot(munic) + 
+  geom_sf(aes(fill = Participants), color = alpha("grey", 1/3)) +
+  scale_fill_viridis_c(na.value = "grey60") + 
+  labs(title="/ Municipality")
+
+regfig <- ggplot(regions) + 
+  geom_sf(aes(fill = Participants), color = alpha("grey", 1/3)) +
+  scale_fill_viridis_c(na.value = "grey60") + 
+  labs(title="/ State")
+
+maps <- list(zipfig, munfig, regfig)
+
+
+```
+
+
+```{r}
+plot_grid(munfig, regfig,  labels = c('A', 'B'), label_size = 12)
+```
+
+There were participants from 554 unique zip codes, of which 525 were valid. In total 770 participants gave a valid zip code (i.e. 30 participants had reported a incorrect zip code). The zip codes were from 184 different municipalities from all states in Finland. 
+
+^[geofi package was used: Markus Kainu, Joona Lehtomäki, Juuso Parkkinen, Jani Miettinen, Leo Lahti Retrieval and analysis of open geospatial data from Finland with the geofi R package. R package version 0.9.2900006. URL: http://ropengov.github.io/geofi]
+
+```{r include = F}
+data %<>% 
+  mutate(occu=factor(occu, labels = c("Studying", "Working", "Army/civil service", "Other"))) %>%
+  mutate(schl=if_else(is.na(schl) & q14 > 1, 0, schl)) %>% 
+  mutate(schl=factor(schl, labels = c("Not studying","Comprehensive school","High school","Vocational School",
+                                      "High school + vocational","Applied University","University"))) %>%
+  mutate(habi=factor(habi, labels = c("w/ Partner", "w/ Parents", "Independently", "Other"))) %>%
+  mutate(sex=factor(sex, labels = c("Male","Female"))) %>%
+  mutate(medu=ordered(medu, labels = c("Comprehensive School", "High School", "Vocational School",
+                                       "Vocational College",  "Applied University", "University", "Unknown"))) %>%
+  mutate(ffina=ordered(ffina, labels = c("Very Poor", "Poor", "Adequate", "Good", "Very Good"))) %>%
+  mutate(ofina=ordered(ofina, labels = c("Very Poor", "Poor", "Adequate", "Good", "Very Good")))
+```
+
+## Gender and Age
+
+```{r include = F}
+saf <- table(data$sex, data$age)
+sap <- prop.table(saf)
+sap <- sap*100
+Sex_Age <- as.data.frame(rbind(saf, sap))
+Sex_Age <- Sex_Age[c(1,3,2,4),]
+Sex_Age$Sex <- c("Male", "", "Female", "")
+Sex_Age$Value <- c("n","%","n","%")
+rownames(Sex_Age) <- seq(1:4)
+Sex_Age <- Sex_Age[, c(6,7,1:5)]
+colnames(Sex_Age)[3:7] <- c("15 Years", "16 Years", "17 Years", "18 Years", "19 Years")
+```
+
+
+```{r}
+kable(Sex_Age, digits = 0, align = c('l', 'c', 'c', 'c', 'c', 'c', 'c'), Caption = "Age and Gender distribution") %>%
+  kable_styling() %>%
+  row_spec(c(1,3),bold=T)
+```
+
+
+## Current status
+
+```{r include=F}
+ol1 <- data %>% drop_na(occu) %>% ggplot(aes(x = occu)) +
+  geom_bar(stat="count", aes(fill = as.factor(occu))) +
+  scale_fill_viridis_d(option = "A", direction = -1) +
+  labs(title="Current status", x = "", y = "Count") +
+  theme(axis.text.x = element_blank(), axis.ticks = element_blank()) 
+
+ol2 <- data %>% drop_na(schl) %>% ggplot(aes(x = schl)) + 
+  geom_bar(stat="count",  aes(fill = as.factor(schl))) +
+  scale_fill_viridis_d(option = "A") +
+  labs(title="School level", x = "", y = "Count") +
+  theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
+  guides(fill = guide_legend(reverse = TRUE))
+
+ol3 <- data %>% drop_na(habi) %>% ggplot(aes(x = habi)) + 
+  geom_bar(stat="count",  aes(fill = as.factor(habi))) + 
+  scale_fill_viridis_d(option = "A", direction = -1) +
+  labs(title="Living arrangement", x = "", y = "Count") +
+  theme(axis.text.x = element_blank(), axis.ticks = element_blank())
+
+p <- list(ol1, ol2, ol3)
+
+```
+
+
+```{r}
+grid.arrange(grobs = p, widths = c(1, 1), layout_matrix = rbind(c(1, 3),
+                                                                c(2, 2)))
+```
+
+
+```{r include=F}
+of <- table(data$schl, data$occu)
+op <- prop.table(of)
+op <- op*100
+Occupation <- as.data.frame(rbind(of, op))
+Occupation <-  Occupation[c(1,8,2,9,3,10,4,11,5,12,6,13,7,14),] 
+Occupation$Level <- c("Not studying", "", "Comprehensive school", "", "High school", "", "Vocational school",
+                      "", "High school + vocational", "", "Applied college", "", "University", "")
+Occupation$Value <- c("n","%","n","%","n","%","n","%","n","%","n","%","n","%")
+rownames(Occupation) <- seq(1:14)
+Occupation <- Occupation[, c(5,6,1:4)]
+```
+
+
+```{r}
+kable(Occupation, digits=0, caption = "Educational level (or occupational status)", align = c('l','c','c','c','c','c')) %>%
+  kable_styling() %>%
+  row_spec(c(1,3,5,7,9,11,13),bold=T)
+```
+
+
+```{r include=F}
+hf <- table(data$habi)
+hp <- prop.table(hf)
+hp <- hp*100
+Living <- as.data.frame(rbind(hf, hp))
+rownames(Living) <- c("n", "%")
+```
+
+
+```{r}
+kable(Living, digits = 0, caption = "Living arrangements", align = c('c','c','c','c')) %>%
+  kable_styling() %>%
+  column_spec(1,bold=T)
+```
+
+The data was age and gender balanced. Most of the participants were either comprehensive school or secondary education students, who still lived their parents.
+
+# Socio-economic status
+
+```{r include=F}
+data %<>%  mutate(ses1 = recode(medu, "Comprehensive School"=1, "High School"=2, "Vocational School"=2,
+                     "Vocational College"=3, "Applied University"=3, "University"=4,
+                     "Unknown"= NA_real_)) %>%
+         mutate(ses2 = recode(ffina, "Very Poor"=1, "Poor"=1, "Adequate"=2, "Good"=3, "Very Good"=4)) %>%
+         mutate(ses3 = recode(ofina, "Very Poor"=1, "Poor"=1, "Adequate"=2, "Good"=3, "Very Good"=4)) %>%
+         mutate(ses = rowMeans(select(., c(ses1:ses3)), na.rm = T))
+```
+
+```{r include=F}
+p1 <- data %>% drop_na(medu) %>% ggplot(aes(x = medu)) + 
+  geom_bar(stat="count",  aes(fill = as.factor(medu))) + 
+  scale_fill_viridis_d(option = "E") +
+  labs(title="Mother's education", x = "", y = "Count") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks = element_blank())
+
+p2 <- data %>% drop_na(ffina) %>% ggplot(aes(x = ffina)) + 
+  geom_bar(stat="count",  aes(fill = as.factor(ffina))) + 
+  scale_fill_viridis_d(option = "E") +
+  labs(title="Family financial situation", x = "", y = "Count") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks = element_blank())
+
+p3 <- data %>% drop_na(ofina) %>% ggplot(aes(x = ofina)) + 
+  geom_bar(stat="count",  aes(fill = as.factor(ofina))) + 
+  scale_fill_viridis_d(option = "E") +
+  labs(title="Personal financial situation", x = "", y = "Count") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks = element_blank())
+
+p4 <- data %>% ggplot(aes(x = ses, fill=..count..)) + 
+  geom_histogram(color="black", binwidth=.25) + 
+  scale_fill_viridis_c(option = "B") +
+  labs(title="Socio-economic status (SES) index", x = "", y = "Count")
+
+p <- list(p1, p2, p3, p4)
+
+```
+
+
+```{r}
+grid.arrange(grobs = p, widths = c(1, 1, 1), layout_matrix = rbind(c(1, 1, 4),
+                                                                   c(2, 3, 4)))
+```
+
+```{r include=F}
+mf <- table(data$medu)
+mp <- prop.table(mf)
+mp <- mp*100
+Mom_Edu <- as.data.frame(rbind(mf, mp))
+rownames(Mom_Edu) <- c("n", "%")
+```
+
+
+```{r}
+kable(Mom_Edu, digits=c(0), caption = "Mother's educational level", align = c('c','c','c','c','c','c','c')) %>%
+  kable_styling() %>%
+  column_spec(1,bold=T)
+```
+
+
+```{r include=F}
+ff <- table(data$ffina)
+fp <- prop.table(ff)
+fp <- fp*100
+of <- table(data$ofina)
+op <- prop.table(of)
+op <- op*100
+Fin.sit <- as.data.frame(rbind(ff, fp, of, op))
+Fin.sit$Value <- c("n", "%", "n", "%")
+Fin.sit$Variable <- c("Family", "", "Personal", "")
+rownames(Fin.sit) <- seq(1:4)
+Fin.sit <- Fin.sit[, c(7,6,1:5)]
+```
+
+
+```{r}
+kable(Fin.sit, digits = 0, caption = "Financial situation", align = c('l', 'c','c','c','c','c','c')) %>%
+  kable_styling() %>%
+  row_spec(c(1,3),bold=T)
+```
+
+
