@@ -16,8 +16,8 @@ library(cowplot)
 library(openxlsx)
 library(naniar)
 library(MissMech)
-remotes::install_github("ropengov/geofi")
-library(geofih)
+#remotes::install_github("ropengov/geofi")
+library(geofi)
 ```
 
 ```{r include=F}
@@ -52,7 +52,7 @@ data <- fdata %>%
 
 ## Missing values
 
-The data were collected using a self-report questionnaire. There were `r pct_miss(mva)` values missing altogether (not including open ended questions), none of the variables showed more than 5% missing. 
+The data were collected using a self-report questionnaire. There were `r round(pct_miss(mva),3)`% of the data missing altogether (not including open ended questions), none of the variables showed more than 5% missing. 
 
 ```{r}
 vis_miss(mva) + labs(title="Missing values")
@@ -72,14 +72,14 @@ gg_miss_upset(mva,
               nsets = 4)
 ```
 
-Based on the non-parametric test of heteroscedasticity, the assumption of missing completely at random (MCAR) was rejected for the numeric data (p = `r MCAR$pnormality`), but the overall amount of missing data in the dataset is very small. 
+Based on the non-parametric test of heteroscedasticity, the assumption of missing completely at random (MCAR) was rejected for the numeric data (p = `r round(MCAR$pnormality,3)`), but the overall amount of missing data in the dataset is very small. 
 
 ## Geographical distribution of participants
 
 ```{r include=F}
 ## MAP STUFF
 #remotes::install_github("ropengov/geofi")
-#library(geofi)
+library(geofi)
 zip1 <- get_zipcodes(year = 2020)
 head(zip1)
 
@@ -117,7 +117,7 @@ munic <- left_join(mun, zip_mun, by = c("kunta" = "kuntanro"))
 #State data
 
 regions <- munic %>% 
-  group_by(mk_name) %>% 
+  group_by(maakunta_name_fi) %>% 
   summarise(Participants = sum(Participants, na.rm = T))
 
 region_table <- as.data.frame(regions[, c(1,2)])
@@ -158,14 +158,13 @@ maps <- list(zipfig, munfig, regfig)
 plot_grid(munfig, regfig,  labels = c('A', 'B'), label_size = 12)
 ```
 
-There were participants from 554 unique zip codes, of which 525 were valid. In total 770 participants gave a valid zip code (i.e. 30 participants had reported a incorrect zip code). The zip codes were from 184 different municipalities from all states in Finland. 
+There were participants from 554 unique zip codes, of which 525 were valid. In total 770 participants gave a valid zip code (i.e. 30 participants had reported a incorrect zip code). The zip codes were from 184 different municipalities from all states in Finland^[geofi package was used: Markus Kainu, Joona Lehtomäki, Juuso Parkkinen, Jani Miettinen, Leo Lahti Retrieval and analysis of open geospatial data from Finland with the geofi R package. R package version 0.9.2900006. URL: http://ropengov.github.io/geofi]. 
 
-^[geofi package was used: Markus Kainu, Joona Lehtomäki, Juuso Parkkinen, Jani Miettinen, Leo Lahti Retrieval and analysis of open geospatial data from Finland with the geofi R package. R package version 0.9.2900006. URL: http://ropengov.github.io/geofi]
 
 ```{r include = F}
 data %<>% 
+  mutate(schl=if_else(is.na(schl) & occu > 1, 0, schl)) %>% 
   mutate(occu=factor(occu, labels = c("Studying", "Working", "Army/civil service", "Other"))) %>%
-  mutate(schl=if_else(is.na(schl) & q14 > 1, 0, schl)) %>% 
   mutate(schl=factor(schl, labels = c("Not studying","Comprehensive school","High school","Vocational School",
                                       "High school + vocational","Applied University","University"))) %>%
   mutate(habi=factor(habi, labels = c("w/ Partner", "w/ Parents", "Independently", "Other"))) %>%
