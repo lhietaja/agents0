@@ -1,0 +1,319 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={\#Agents: Sample Statistics 2020},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{flafter}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\title{\#Agents: Sample Statistics 2020}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+This is a documentation of the \#Agents -data. The data was collected in
+between 9.12.2019 -- 19.1.2020 as a telephone survey from a gender and
+age - balanced sample of 15-19 year-old finnish adolescents. The total
+sample size is 800. An average interview took \textasciitilde30 minutes
+and the sample was drawn from the civil registry of Finland. All
+together 24269 phone numbers were contacted during the sampling period.
+
+\includegraphics{Agents_sample_descriptives_3_files/figure-latex/unnamed-chunk-6-1}
+Regarding age or gender the over/underrepresentations were less than 1\%
+(see also Table 2).
+
+\newpage
+
+\hypertarget{missing-values}{%
+\section{1. Missing values}\label{missing-values}}
+
+The data were collected using a self-report questionnaire. There were
+0.168\% of the data missing altogether (not including open ended
+questions), none of the variables showed more than 5\% missing.
+
+\includegraphics{Agents_sample_descriptives_3_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+The most missing (2.62\% to 3.75\%) were in items assessing issues
+related to income (q280,q281,q282) and item q135 assessing
+trustworthiness of a known fake-news outlet. The income items also
+showed the most common intersections (same items missing from the same
+participants).
+
+\includegraphics{Agents_sample_descriptives_3_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+Based on the non-parametric test of heteroscedasticity, the assumption
+of missing completely at random (MCAR) was rejected for the numeric data
+(p = 0.001), but the overall amount of missing data in the dataset is
+very small.
+
+\hypertarget{geographical-distribution-of-participants}{%
+\section{2. Geographical distribution of
+participants}\label{geographical-distribution-of-participants}}
+
+\includegraphics{Agents_sample_descriptives_3_files/figure-latex/unnamed-chunk-12-1.pdf}
+
+There were participants from 554 unique zip codes, of which 525 were
+valid. In total 770 participants gave a valid zip code (i.e.~30
+participants had reported a incorrect zip code, see also Table 1). The
+zip codes were from 184 different municipalities from all states in
+Finland\footnote{geofi package was used: Markus Kainu, Joona Lehtomäki,
+  Juuso Parkkinen, Jani Miettinen, Leo Lahti Retrieval and analysis of
+  open geospatial data from Finland with the geofi R package. R package
+  version 0.9.2900006. URL: \url{http://ropengov.github.io/geofi}}.
+
+\newpage
+
+\hypertarget{current-status}{%
+\section{3. Current status}\label{current-status}}
+
+\includegraphics{Agents_sample_descriptives_3_files/figure-latex/unnamed-chunk-15-1}
+Most of the participants current status (see also Table 3) were either
+comprehensive school or secondary education student, who still lived
+their parents (Table 4).
+
+\newpage
+
+\hypertarget{socio-economic-status}{%
+\section{4. Socio-economic status}\label{socio-economic-status}}
+
+\includegraphics{Agents_sample_descriptives_3_files/figure-latex/unnamed-chunk-18-1}
+
+Examination of the participants socio-economic status indicated that the
+sample comprised of a representative distribution of young people from
+low to high socio-economic status. The majority reported that their
+mother had acquired at least a secondary degree and were in an adequate
+to good financial situation (see also Tables 5 and 6).
+
+\newpage
+
+\hypertarget{tables}{%
+\section{Tables}\label{tables}}
+
+\begin{table}
+
+\caption{\label{tab:region-table}Regional distribution of Participants}
+\centering
+\begin{tabular}[t]{>{}l|r|r}
+\hline
+Region & Participants & \%\\
+\hline
+\textbf{Ahvenanmaa} & 1 & 0.00\\
+\hline
+\textbf{Etelä-Karjala} & 16 & 0.02\\
+\hline
+\textbf{Etelä-Pohjanmaa} & 41 & 0.05\\
+\hline
+\textbf{Etelä-Savo} & 27 & 0.04\\
+\hline
+\textbf{Kainuu} & 15 & 0.02\\
+\hline
+\textbf{Kanta-Häme} & 33 & 0.04\\
+\hline
+\textbf{Keski-Pohjanmaa} & 13 & 0.02\\
+\hline
+\textbf{Keski-Suomi} & 55 & 0.07\\
+\hline
+\textbf{Kymenlaakso} & 18 & 0.02\\
+\hline
+\textbf{Lappi} & 18 & 0.02\\
+\hline
+\textbf{Pirkanmaa} & 78 & 0.10\\
+\hline
+\textbf{Pohjanmaa} & 9 & 0.01\\
+\hline
+\textbf{Pohjois-Karjala} & 23 & 0.03\\
+\hline
+\textbf{Pohjois-Pohjanmaa} & 86 & 0.11\\
+\hline
+\textbf{Pohjois-Savo} & 38 & 0.05\\
+\hline
+\textbf{Päijät-Häme} & 27 & 0.04\\
+\hline
+\textbf{Satakunta} & 30 & 0.04\\
+\hline
+\textbf{Uusimaa} & 168 & 0.22\\
+\hline
+\textbf{Varsinais-Suomi} & 74 & 0.10\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:sex-age-table}Age and Gender distribution}
+\centering
+\begin{tabular}[t]{l|c|c|c|c|c|c}
+\hline
+Sex & Value & 15 Years & 16 Years & 17 Years & 18 Years & 19 Years\\
+\hline
+\textbf{Male} & \textbf{n} & \textbf{78} & \textbf{83} & \textbf{80} & \textbf{79} & \textbf{79}\\
+\hline
+ & \% & 10 & 10 & 10 & 10 & \vphantom{1} 10\\
+\hline
+\textbf{Female} & \textbf{n} & \textbf{77} & \textbf{84} & \textbf{79} & \textbf{79} & \textbf{82}\\
+\hline
+ & \% & 10 & 10 & 10 & 10 & 10\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:surrent-status-table}Educational level (or occupational status)}
+\centering
+\begin{tabular}[t]{l|c|c|c|c|c}
+\hline
+Level & Value & Studying & Working & Army/civil service & Other\\
+\hline
+\textbf{Not studying} & \textbf{n} & \textbf{0} & \textbf{64} & \textbf{14} & \textbf{23}\\
+\hline
+ & \% & 0 & 8 & 2 & 3\\
+\hline
+\textbf{Comprehensive school} & \textbf{n} & \textbf{177} & \textbf{0} & \textbf{0} & \textbf{0}\\
+\hline
+ & \% & 22 & 0 & 0 & 0\\
+\hline
+\textbf{High school} & \textbf{n} & \textbf{313} & \textbf{0} & \textbf{0} & \textbf{0}\\
+\hline
+ & \% & 39 & 0 & 0 & 0\\
+\hline
+\textbf{Vocational school} & \textbf{n} & \textbf{166} & \textbf{0} & \textbf{0} & \textbf{0}\\
+\hline
+ & \% & 21 & 0 & 0 & 0\\
+\hline
+\textbf{High school + vocational} & \textbf{n} & \textbf{18} & \textbf{0} & \textbf{0} & \textbf{0}\\
+\hline
+ & \% & 2 & 0 & 0 & \vphantom{1} 0\\
+\hline
+\textbf{Applied college} & \textbf{n} & \textbf{14} & \textbf{0} & \textbf{0} & \textbf{0}\\
+\hline
+ & \% & 2 & 0 & 0 & 0\\
+\hline
+\textbf{University} & \textbf{n} & \textbf{11} & \textbf{0} & \textbf{0} & \textbf{0}\\
+\hline
+ & \% & 1 & 0 & 0 & 0\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:living-table}Living arrangements}
+\centering
+\begin{tabular}[t]{>{}l|c|c|c|c}
+\hline
+  & w/ Partner & w/ Parents & Independently & Other\\
+\hline
+\textbf{n} & 16 & 668 & 110 & 6\\
+\hline
+\textbf{\%} & 2 & 84 & 14 & 1\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:mom-edu-table}Mother's educational level}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{>{}l|c|c|c|c|c|c|c}
+\hline
+  & Comprehensive School & High School & Vocational School & Vocational College & Applied University & University & Unknown\\
+\hline
+\textbf{n} & 16 & 85 & 155 & 37 & 146 & 168 & 192\\
+\hline
+\textbf{\%} & 2 & 11 & 19 & 5 & 18 & 21 & 24\\
+\hline
+\end{tabular}}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:fin-sit-table}Financial situation}
+\centering
+\begin{tabular}[t]{l|c|c|c|c|c|c}
+\hline
+Variable & Value & Very Poor & Poor & Adequate & Good & Very Good\\
+\hline
+\textbf{Family} & \textbf{n} & \textbf{1} & \textbf{30} & \textbf{203} & \textbf{414} & \textbf{152}\\
+\hline
+ & \% & 0 & 4 & 25 & 52 & 19\\
+\hline
+\textbf{Personal} & \textbf{n} & \textbf{7} & \textbf{47} & \textbf{208} & \textbf{416} & \textbf{119}\\
+\hline
+ & \% & 1 & 6 & 26 & 52 & 15\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{document}

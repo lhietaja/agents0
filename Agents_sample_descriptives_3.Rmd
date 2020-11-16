@@ -1,9 +1,11 @@
 ---
-title: "#Agents: Sample Statistics 2020" 
-output: html_document
+title: '#Agents: Sample Statistics 2020'
+output:
+  
+  html_document: default
+  pdf_document: 
+    extra_dependencies: ["flafter", "float"]
 ---
-
-This is a documentation of the #Agents -data. The data was collected in January 2020 as a telephone survey from a gender and age - balanced sample of 15-19 year-old finnish adolescents, the total sample size is 800.
 
 ```{r include=F}
 library(rmarkdown)
@@ -22,6 +24,7 @@ library(geofi)
 
 ```{r include=F}
 knitr::opts_chunk$set(echo = FALSE, fig.width = 10, fig.fullwidth = T)
+
 ```
 
 ```{r include=F}
@@ -50,7 +53,26 @@ data <- fdata %>%
   dplyr::rename(zip_code = q13, occu=q14, schl=q16, habi=q18, sex=q11, age=q12, medu=q17, ffina=q290, ofina=q291) 
 ```
 
-## Missing values
+This is a documentation of the #Agents -data. The data was collected in between 9.12.2019 – 19.1.2020 as a telephone survey from a gender and age - balanced sample of 15-19 year-old finnish adolescents. The total sample size is 800. An average interview took ~30 minutes and the sample was drawn from the civil registry of Finland. All together 24269 phone numbers were contacted during the sampling period.  
+
+```{r include=FALSE}
+data %<>% mutate(sex=factor(sex, labels = c("Male","Female")))
+
+g_a <- data %>% drop_na(age) %>% 
+  ggplot(aes(x=age, y=stat(count), fill = sex)) + geom_bar(stat = "count", position=position_dodge()) +
+  scale_fill_viridis_d(option = "E") + 
+  labs(title="Sex and Age", y = "Frequencies", x = "Age") + 
+  theme(legend.title = element_blank())
+```
+
+```{r fig.pos = "!H", out.extra = ""}
+g_a
+
+```
+Regarding age or gender the over/underrepresentations were less than 1% (see also Table 2).
+
+\newpage 
+# 1. Missing values
 
 The data were collected using a self-report questionnaire. There were `r round(pct_miss(mva),3)`% of the data missing altogether (not including open ended questions), none of the variables showed more than 5% missing. 
 
@@ -74,7 +96,7 @@ gg_miss_upset(mva,
 
 Based on the non-parametric test of heteroscedasticity, the assumption of missing completely at random (MCAR) was rejected for the numeric data (p = `r round(MCAR$pnormality,3)`), but the overall amount of missing data in the dataset is very small. 
 
-## Geographical distribution of participants
+# 2. Geographical distribution of participants
 
 ```{r include=F}
 ## MAP STUFF
@@ -119,33 +141,23 @@ munic <- left_join(mun, zip_mun, by = c("kunta" = "kuntanro"))
 regions <- munic %>% 
   group_by(maakunta_name_fi) %>% 
   summarise(Participants = sum(Participants, na.rm = T))
-
-region_table <- as.data.frame(regions[, c(1,2)])
-colnames(region_table) <- c("State", "n")
-```
-
-
-```{r include=F}
-kable(region_table, align = c('l','c')) %>%
-  kable_styling() %>%
-  column_spec(1, bold=T)
 ```
 
 
 ```{r include=F}
 zipfig <- ggplot(zip12) + 
   geom_sf(aes(fill = Participants), color = alpha("grey", 1/3)) +
-  scale_fill_viridis_c(na.value = "grey60") + 
+  scale_fill_viridis_c(na.value = "grey60", option = "E") + 
     labs(title="/ Zip code")
 
 munfig <- ggplot(munic) + 
   geom_sf(aes(fill = Participants), color = alpha("grey", 1/3)) +
-  scale_fill_viridis_c(na.value = "grey60") + 
+  scale_fill_viridis_c(na.value = "grey60", option = "E") + 
   labs(title="/ Municipality")
 
 regfig <- ggplot(regions) + 
   geom_sf(aes(fill = Participants), color = alpha("grey", 1/3)) +
-  scale_fill_viridis_c(na.value = "grey60") + 
+  scale_fill_viridis_c(na.value = "grey60", option = "E") + 
   labs(title="/ State")
 
 maps <- list(zipfig, munfig, regfig)
@@ -153,13 +165,11 @@ maps <- list(zipfig, munfig, regfig)
 
 ```
 
-
 ```{r}
 plot_grid(munfig, regfig,  labels = c('A', 'B'), label_size = 12)
 ```
 
-There were participants from 554 unique zip codes, of which 525 were valid. In total 770 participants gave a valid zip code (i.e. 30 participants had reported a incorrect zip code). The zip codes were from 184 different municipalities from all states in Finland^[geofi package was used: Markus Kainu, Joona Lehtomäki, Juuso Parkkinen, Jani Miettinen, Leo Lahti Retrieval and analysis of open geospatial data from Finland with the geofi R package. R package version 0.9.2900006. URL: http://ropengov.github.io/geofi]. 
-
+There were participants from 554 unique zip codes, of which 525 were valid. In total 770 participants gave a valid zip code (i.e. 30 participants had reported a incorrect zip code, see also Table 1). The zip codes were from 184 different municipalities from all states in Finland^[geofi package was used: Markus Kainu, Joona Lehtomäki, Juuso Parkkinen, Jani Miettinen, Leo Lahti Retrieval and analysis of open geospatial data from Finland with the geofi R package. R package version 0.9.2900006. URL: http://ropengov.github.io/geofi]. 
 
 ```{r include = F}
 data %<>% 
@@ -168,55 +178,31 @@ data %<>%
   mutate(schl=factor(schl, labels = c("Not studying","Comprehensive school","High school","Vocational School",
                                       "High school + vocational","Applied University","University"))) %>%
   mutate(habi=factor(habi, labels = c("w/ Partner", "w/ Parents", "Independently", "Other"))) %>%
-  mutate(sex=factor(sex, labels = c("Male","Female"))) %>%
   mutate(medu=ordered(medu, labels = c("Comprehensive School", "High School", "Vocational School",
                                        "Vocational College",  "Applied University", "University", "Unknown"))) %>%
   mutate(ffina=ordered(ffina, labels = c("Very Poor", "Poor", "Adequate", "Good", "Very Good"))) %>%
   mutate(ofina=ordered(ofina, labels = c("Very Poor", "Poor", "Adequate", "Good", "Very Good")))
 ```
-
-## Gender and Age
-
-```{r include = F}
-saf <- table(data$sex, data$age)
-sap <- prop.table(saf)
-sap <- sap*100
-Sex_Age <- as.data.frame(rbind(saf, sap))
-Sex_Age <- Sex_Age[c(1,3,2,4),]
-Sex_Age$Sex <- c("Male", "", "Female", "")
-Sex_Age$Value <- c("n","%","n","%")
-rownames(Sex_Age) <- seq(1:4)
-Sex_Age <- Sex_Age[, c(6,7,1:5)]
-colnames(Sex_Age)[3:7] <- c("15 Years", "16 Years", "17 Years", "18 Years", "19 Years")
-```
-
-
-```{r}
-kable(Sex_Age, digits = 0, align = c('l', 'c', 'c', 'c', 'c', 'c', 'c'), Caption = "Age and Gender distribution") %>%
-  kable_styling() %>%
-  row_spec(c(1,3),bold=T)
-```
-
-
-## Current status
+\newpage
+# 3. Current status
 
 ```{r include=F}
 ol1 <- data %>% drop_na(occu) %>% ggplot(aes(x = occu)) +
   geom_bar(stat="count", aes(fill = as.factor(occu))) +
-  scale_fill_viridis_d(option = "A", direction = -1) +
+  scale_fill_viridis_d(option = "E", direction = -1) +
   labs(title="Current status", x = "", y = "Count") +
   theme(axis.text.x = element_blank(), axis.ticks = element_blank()) 
 
 ol2 <- data %>% drop_na(schl) %>% ggplot(aes(x = schl)) + 
   geom_bar(stat="count",  aes(fill = as.factor(schl))) +
-  scale_fill_viridis_d(option = "A") +
+  scale_fill_viridis_d(option = "E") +
   labs(title="School level", x = "", y = "Count") +
   theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
   guides(fill = guide_legend(reverse = TRUE))
 
 ol3 <- data %>% drop_na(habi) %>% ggplot(aes(x = habi)) + 
   geom_bar(stat="count",  aes(fill = as.factor(habi))) + 
-  scale_fill_viridis_d(option = "A", direction = -1) +
+  scale_fill_viridis_d(option = "E", direction = -1) +
   labs(title="Living arrangement", x = "", y = "Count") +
   theme(axis.text.x = element_blank(), axis.ticks = element_blank())
 
@@ -224,52 +210,14 @@ p <- list(ol1, ol2, ol3)
 
 ```
 
-
-```{r}
+```{r fig.pos = "!H", out.extra = ""}
 grid.arrange(grobs = p, widths = c(1, 1), layout_matrix = rbind(c(1, 3),
                                                                 c(2, 2)))
 ```
+Most of the participants current status (see also Table 3) were either comprehensive school or secondary education student, who still lived their parents (Table 4).
 
-
-```{r include=F}
-of <- table(data$schl, data$occu)
-op <- prop.table(of)
-op <- op*100
-Occupation <- as.data.frame(rbind(of, op))
-Occupation <-  Occupation[c(1,8,2,9,3,10,4,11,5,12,6,13,7,14),] 
-Occupation$Level <- c("Not studying", "", "Comprehensive school", "", "High school", "", "Vocational school",
-                      "", "High school + vocational", "", "Applied college", "", "University", "")
-Occupation$Value <- c("n","%","n","%","n","%","n","%","n","%","n","%","n","%")
-rownames(Occupation) <- seq(1:14)
-Occupation <- Occupation[, c(5,6,1:4)]
-```
-
-
-```{r}
-kable(Occupation, digits=0, caption = "Educational level (or occupational status)", align = c('l','c','c','c','c','c')) %>%
-  kable_styling() %>%
-  row_spec(c(1,3,5,7,9,11,13),bold=T)
-```
-
-
-```{r include=F}
-hf <- table(data$habi)
-hp <- prop.table(hf)
-hp <- hp*100
-Living <- as.data.frame(rbind(hf, hp))
-rownames(Living) <- c("n", "%")
-```
-
-
-```{r}
-kable(Living, digits = 0, caption = "Living arrangements", align = c('c','c','c','c')) %>%
-  kable_styling() %>%
-  column_spec(1,bold=T)
-```
-
-The data was age and gender balanced. Most of the participants were either comprehensive school or secondary education students, who still lived their parents.
-
-# Socio-economic status
+\newpage
+# 4. Socio-economic status
 
 ```{r include=F}
 data %<>%  mutate(ses1 = recode(medu, "Comprehensive School"=1, "High School"=2, "Vocational School"=2,
@@ -304,7 +252,7 @@ p3 <- data %>% drop_na(ofina) %>% ggplot(aes(x = ofina)) +
 
 p4 <- data %>% ggplot(aes(x = ses, fill=..count..)) + 
   geom_histogram(color="black", binwidth=.25) + 
-  scale_fill_viridis_c(option = "B") +
+  scale_fill_viridis_c(option = "E") +
   labs(title="Socio-economic status (SES) index", x = "", y = "Count")
 
 p <- list(p1, p2, p3, p4)
@@ -312,9 +260,84 @@ p <- list(p1, p2, p3, p4)
 ```
 
 
-```{r}
+```{r fig.pos = "!H", out.extra = ""}
 grid.arrange(grobs = p, widths = c(1, 1, 1), layout_matrix = rbind(c(1, 1, 4),
                                                                    c(2, 3, 4)))
+```
+
+Examination of the participants socio-economic status indicated that the sample comprised of a representative distribution of young people from low to high socio-economic status. The majority reported that their mother had acquired at least a secondary degree and were in an adequate to good financial situation (see also Tables 5 and 6).
+
+\newpage
+# Tables
+
+```{r include=FALSE}
+region_table <- regions[, c(1,2)]
+region_table <- as.data.frame(region_table)
+region_table <- region_table[, -3]
+colnames(region_table)[1] <- "Region"
+region_table$'%' <- region_table$Participants / 770
+region_table
+```
+
+```{r region-table, fig.pos = "!H", out.extra = ""}
+kable(region_table, digits = 2, caption = "Regional distribution of Participants") %>% 
+  kable_styling() %>%
+  column_spec(1,bold=T)
+```
+
+
+```{r include = F}
+saf <- table(data$sex, data$age)
+sap <- prop.table(saf)
+sap <- sap*100
+Sex_Age <- as.data.frame(rbind(saf, sap))
+Sex_Age <- Sex_Age[c(1,3,2,4),]
+Sex_Age$Sex <- c("Male", "", "Female", "")
+Sex_Age$Value <- c("n","%","n","%")
+rownames(Sex_Age) <- seq(1:4)
+Sex_Age <- Sex_Age[, c(6,7,1:5)]
+colnames(Sex_Age)[3:7] <- c("15 Years", "16 Years", "17 Years", "18 Years", "19 Years")
+```
+
+```{r sex-age-table, fig.pos = "!H", out.extra = ""}
+kable(Sex_Age, digits = 0, align = c('l', 'c', 'c', 'c', 'c', 'c', 'c'), caption = "Age and Gender distribution") %>%
+  kable_styling() %>%
+  row_spec(c(1,3),bold=T)
+```
+
+
+```{r include=F}
+of <- table(data$schl, data$occu)
+op <- prop.table(of)
+op <- op*100
+Occupation <- as.data.frame(rbind(of, op))
+Occupation <-  Occupation[c(1,8,2,9,3,10,4,11,5,12,6,13,7,14),] 
+Occupation$Level <- c("Not studying", "", "Comprehensive school", "", "High school", "", "Vocational school",
+                      "", "High school + vocational", "", "Applied college", "", "University", "")
+Occupation$Value <- c("n","%","n","%","n","%","n","%","n","%","n","%","n","%")
+rownames(Occupation) <- seq(1:14)
+Occupation <- Occupation[, c(5,6,1:4)]
+```
+
+```{r surrent-status-table, fig.pos = "!H", out.extra = ""}
+kable(Occupation, digits=0, caption = "Educational level (or occupational status)", align = c('l','c','c','c','c','c')) %>%
+  kable_styling() %>%
+  row_spec(c(1,3,5,7,9,11,13),bold=T)
+```
+
+
+```{r include=F}
+hf <- table(data$habi)
+hp <- prop.table(hf)
+hp <- hp*100
+Living <- as.data.frame(rbind(hf, hp))
+rownames(Living) <- c("n", "%")
+```
+
+```{r living-table, fig.pos = "!H", out.extra = ""}
+kable(Living, digits = 0, caption = "Living arrangements", align = c('c','c','c','c')) %>%
+  kable_styling() %>%
+  column_spec(1,bold=T)
 ```
 
 ```{r include=F}
@@ -325,13 +348,11 @@ Mom_Edu <- as.data.frame(rbind(mf, mp))
 rownames(Mom_Edu) <- c("n", "%")
 ```
 
-
-```{r}
+```{r mom-edu-table, fig.pos = "!H", out.extra = ""}
 kable(Mom_Edu, digits=c(0), caption = "Mother's educational level", align = c('c','c','c','c','c','c','c')) %>%
-  kable_styling() %>%
+  kable_styling(latex_options="scale_down") %>%
   column_spec(1,bold=T)
 ```
-
 
 ```{r include=F}
 ff <- table(data$ffina)
@@ -347,11 +368,8 @@ rownames(Fin.sit) <- seq(1:4)
 Fin.sit <- Fin.sit[, c(7,6,1:5)]
 ```
 
-
-```{r}
+```{r fin-sit-table, fig.pos = "!H", out.extra = ""}
 kable(Fin.sit, digits = 0, caption = "Financial situation", align = c('l', 'c','c','c','c','c','c')) %>%
   kable_styling() %>%
   row_spec(c(1,3),bold=T)
 ```
-
-
